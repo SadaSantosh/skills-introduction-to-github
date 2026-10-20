@@ -1,5 +1,14 @@
 # Introduction to GitHub
 
+## Daily Expenses & Work App
+
+This repository now includes a small app at `/index.html` where you can:
+
+- Add and review daily expense items with a running total
+- Add work tasks and mark them complete
+
+To use it, open `index.html` in your browser.
+
 _Get started using GitHub in less than an hour._
 
 ## Welcome

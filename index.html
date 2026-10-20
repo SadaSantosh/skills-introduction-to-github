@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Expenses & Work Tracker</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        max-width: 900px;
+      }
+      h1 {
+        margin-top: 0;
+      }
+      .grid {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      .card {
+        border: 1px solid #8884;
+        border-radius: 10px;
+        padding: 16px;
+      }
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      input,
+      button {
+        padding: 8px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      .muted {
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Daily Expenses & Work Tracker</h1>
+    <p class="muted">Track what you spend and what you complete each day.</p>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Expenses</h2>
+        <form id="expense-form">
+          <input id="expense-name" type="text" placeholder="Expense" required />
+          <input id="expense-amount" type="number" min="0" step="0.01" placeholder="Amount" required />
+          <button type="submit">Add</button>
+        </form>
+        <p><strong>Total today:</strong> $<span id="expense-total">0.00</span></p>
+        <ul id="expense-list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Work</h2>
+        <form id="work-form">
+          <input id="work-task" type="text" placeholder="Task" required />
+          <button type="submit">Add</button>
+        </form>
+        <p><strong>Completed:</strong> <span id="work-completed">0</span></p>
+        <ul id="work-list"></ul>
+      </section>
+    </div>
+
+    <script>
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const expensesKey = `expenses-${todayKey}`;
+      const workKey = `work-${todayKey}`;
+
+      const expenses = JSON.parse(localStorage.getItem(expensesKey) || "[]");
+      const work = JSON.parse(localStorage.getItem(workKey) || "[]");
+
+      const expenseList = document.getElementById("expense-list");
+      const expenseTotal = document.getElementById("expense-total");
+      const workList = document.getElementById("work-list");
+      const workCompleted = document.getElementById("work-completed");
+
+      function save() {
+        localStorage.setItem(expensesKey, JSON.stringify(expenses));
+        localStorage.setItem(workKey, JSON.stringify(work));
+      }
+
+      function renderExpenses() {
+        expenseList.innerHTML = "";
+        let total = 0;
+        expenses.forEach((item) => {
+          total += item.amount;
+          const li = document.createElement("li");
+          li.textContent = `${item.name}: $${item.amount.toFixed(2)}`;
+          expenseList.appendChild(li);
+        });
+        expenseTotal.textContent = total.toFixed(2);
+      }
+
+      function renderWork() {
+        workList.innerHTML = "";
+        let completed = 0;
+        work.forEach((item, index) => {
+          if (item.done) completed += 1;
+          const li = document.createElement("li");
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = item.done;
+          checkbox.addEventListener("change", () => {
+            work[index].done = checkbox.checked;
+            save();
+            renderWork();
+          });
+          li.appendChild(checkbox);
+          li.append(` ${item.task}`);
+          workList.appendChild(li);
+        });
+        workCompleted.textContent = completed;
+      }
+
+      document.getElementById("expense-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const nameInput = document.getElementById("expense-name");
+        const amountInput = document.getElementById("expense-amount");
+        expenses.push({ name: nameInput.value.trim(), amount: Number(amountInput.value) });
+        nameInput.value = "";
+        amountInput.value = "";
+        save();
+        renderExpenses();
+      });
+
+      document.getElementById("work-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const taskInput = document.getElementById("work-task");
+        work.push({ task: taskInput.value.trim(), done: false });
+        taskInput.value = "";
+        save();
+        renderWork();
+      });
+
+      renderExpenses();
+      renderWork();
+    </script>
+  </body>
+</html>
